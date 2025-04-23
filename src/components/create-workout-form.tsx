@@ -10,7 +10,7 @@ import { useCreateWorkout } from "@/hooks/use-create-workout";
 import { createWorkoutSchema, CreateWorkoutValues } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronsUpDown } from "lucide-react";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import LoadingButton from "./loading-button";
 import {
@@ -25,6 +25,7 @@ import { Input } from "./ui/input";
 import { Textarea } from "./ui/textarea";
 
 export default function CreateWorkoutForm() {
+  const [isPending, startTransition] = useTransition();
   const [isOpen, setIsOpen] = useState(false);
   const mutation = useCreateWorkout();
 
@@ -37,9 +38,11 @@ export default function CreateWorkoutForm() {
   });
 
   async function onSubmit(values: CreateWorkoutValues) {
-    mutation.mutate({
-      name: values.name,
-      description: values.description,
+    startTransition(() => {
+      mutation.mutate({
+        name: values.name,
+        description: values.description,
+      });
     });
   }
 
@@ -93,7 +96,7 @@ export default function CreateWorkoutForm() {
               )}
             />
             <div className="flex justify-end">
-              <LoadingButton type="submit" loading={mutation.isPending}>
+              <LoadingButton type="submit" loading={isPending}>
                 Create
               </LoadingButton>
             </div>
