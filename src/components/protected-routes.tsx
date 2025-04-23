@@ -7,14 +7,18 @@ import { ReactNode } from "react";
 import { useAuth } from "./auth-context";
 
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (!user) {
+    if (!loading && !user) {
       router.push("/login");
     }
-  }, [user, router]);
+  }, [user, loading, router]);
+
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
   return user ? children : null;
 };

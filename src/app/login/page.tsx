@@ -20,7 +20,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 export default function Page() {
-  const { login } = useAuth();
+  const { login, user } = useAuth();
   const mutation = useLoginRegister();
   const [loginLoading, setLoginLoading] = useState(false);
 
@@ -37,11 +37,6 @@ export default function Page() {
     await login(values.username, values.password);
     setLoginLoading(false);
   }
-
-  //   const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
-  //     e.preventDefault();
-  //     login(username, password);
-  //   };
 
   async function onCreateUser(values: SignUpValues) {
     mutation.mutate(

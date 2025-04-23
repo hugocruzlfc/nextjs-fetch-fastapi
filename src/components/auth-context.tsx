@@ -4,7 +4,7 @@ import { API_ROUTES } from "@/lib/constants";
 import ky from "ky";
 
 import { useRouter } from "next/navigation";
-import { createContext, use, useState } from "react";
+import { createContext, use, useEffect, useState } from "react";
 
 type AuthType = {
   access_token: string;
@@ -13,6 +13,7 @@ type AuthType = {
 
 type AuthContextType = {
   user: AuthType | undefined;
+  loading: boolean;
   login: (username: string, password: string) => Promise<void>;
   logout: () => void;
 };
@@ -23,7 +24,25 @@ export const AuthContext = createContext<AuthContextType | undefined>(
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<AuthType | undefined>(undefined);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  useEffect(() => {
+    const initializeUser = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (token) {
+          setUser({ access_token: token, token_type: "Bearer" });
+        }
+      } catch (error) {
+        console.error("Error initializing user:", error);
+      } finally {
+        setLoading(false); // Finaliza la carga
+      }
+    };
+
+    initializeUser();
+  }, []);
 
   const login = async (username: string, password: string) => {
     try {
@@ -35,13 +54,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           body: formData,
         })
         .json<AuthType>();
-
-      console.log(response);
-      ky.extend({
-        headers: {
-          Authorization: `Bearer ${response.access_token}`,
-        },
-      });
       localStorage.setItem("token", response.access_token);
       setUser(response);
       router.push("/");
@@ -62,7 +74,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, logout }}>
+    <AuthContext.Provider value={{ user, loading, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

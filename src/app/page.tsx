@@ -17,18 +17,30 @@ export default function Home() {
   const queryClient = useQueryClient();
   const { user, logout } = useAuth();
 
+  console.log(user);
+
   const userId = user?.access_token;
 
   const queryWorkouts = useQuery({
     queryKey: ["workouts", userId],
-    queryFn: () => ky.get(API_ROUTES.WORKOUTS).json<Workout[]>(),
+    queryFn: () =>
+      ky
+        .get(API_ROUTES.WORKOUTS, {
+          headers: { Authorization: `Bearer ${user?.access_token}` },
+        })
+        .json<Workout[]>(),
     enabled: !!userId,
     staleTime: Infinity,
   });
 
   const queryRoutines = useQuery({
     queryKey: ["routines", userId],
-    queryFn: () => ky.get(API_ROUTES.ROUTINES).json<Routine[]>(),
+    queryFn: () =>
+      ky
+        .get(API_ROUTES.ROUTINES, {
+          headers: { Authorization: `Bearer ${user?.access_token}` },
+        })
+        .json<Routine[]>(),
     enabled: !!userId,
     staleTime: Infinity,
   });
