@@ -1,30 +1,45 @@
 "use client";
 
+import kyInstance from "@/lib/ky-instance";
 import { useRouter } from "next/navigation";
-import { createContext, useState } from "react";
+import { createContext, use, useState } from "react";
 
-const AuthContext = createContext();
+type AuthType = {
+  access_token: string;
+  token_type: string;
+};
 
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+type AuthContextType = {
+  user: AuthType | undefined;
+  login: (username: string, password: string) => Promise<void>;
+  logout: () => void;
+};
+
+export const AuthContext = createContext<AuthContextType | undefined>(
+  undefined,
+);
+
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<AuthType | undefined>(undefined);
   const router = useRouter();
 
-  const login = async (username, password) => {
+  const login = async (username: string, password: string) => {
     try {
       const formData = new FormData();
       formData.append("username", username);
       formData.append("password", password);
-      const response = await axios.post(
-        "http://localhost:8000/auth/token",
-        formData,
-        {
-          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      const response = await kyInstance
+        .post("http://localhost:8000/auth/token", {
+          body: formData,
+        })
+        .json<AuthType>();
+      kyInstance.extend({
+        headers: {
+          Authorization: `Bearer ${response.access_token}`,
         },
-      );
-      axios.defaults.headers.common["Authorization"] =
-        `Bearer ${response.data.access_token}`;
-      localStorage.setItem("token", response.data.access_token);
-      setUser(response.data);
+      });
+      localStorage.setItem("token", response.access_token);
+      setUser(response);
       router.push("/");
     } catch (error) {
       console.log("Login Failed:", error);
@@ -32,8 +47,13 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    setUser(null);
-    delete axios.defaults.headers.common["Authorization"];
+    setUser(undefined);
+    kyInstance.extend({
+      headers: {
+        Authorization: undefined,
+      },
+    });
+    localStorage.removeItem("token");
     router.push("/login");
   };
 
@@ -44,4 +64,11 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export default AuthContext;
+export const useAuth = () => {
+  const context = use(AuthContext);
+
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};
