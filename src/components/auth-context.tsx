@@ -1,5 +1,6 @@
 "use client";
 
+import { API_ROUTES } from "@/lib/constants";
 import kyInstance from "@/lib/ky-instance";
 import { useRouter } from "next/navigation";
 import { createContext, use, useState } from "react";
@@ -29,7 +30,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       formData.append("username", username);
       formData.append("password", password);
       const response = await kyInstance
-        .post("http://localhost:8000/auth/token", {
+        .post(API_ROUTES.LOGIN, {
           body: formData,
         })
         .json<AuthType>();
