@@ -1,7 +1,8 @@
 "use client";
 
 import { API_ROUTES } from "@/lib/constants";
-import kyInstance from "@/lib/ky-instance";
+import ky from "ky";
+
 import { useRouter } from "next/navigation";
 import { createContext, use, useState } from "react";
 
@@ -29,12 +30,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       const formData = new FormData();
       formData.append("username", username);
       formData.append("password", password);
-      const response = await kyInstance
+      const response = await ky
         .post(API_ROUTES.LOGIN, {
           body: formData,
         })
         .json<AuthType>();
-      kyInstance.extend({
+
+      console.log(response);
+      ky.extend({
         headers: {
           Authorization: `Bearer ${response.access_token}`,
         },
@@ -49,7 +52,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const logout = () => {
     setUser(undefined);
-    kyInstance.extend({
+    ky.extend({
       headers: {
         Authorization: undefined,
       },

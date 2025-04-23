@@ -2,7 +2,7 @@
 import { useAuth } from "@/components/auth-context";
 import ProtectedRoute from "@/components/protected-routes";
 import { API_ROUTES } from "@/lib/constants";
-import kyInstance from "@/lib/ky-instance";
+
 import { Routine, Workout } from "@/lib/types";
 import {
   QueryKey,
@@ -10,6 +10,7 @@ import {
   useQuery,
   useQueryClient,
 } from "@tanstack/react-query";
+import ky from "ky";
 import { useState } from "react";
 
 export default function Home() {
@@ -20,14 +21,14 @@ export default function Home() {
 
   const queryWorkouts = useQuery({
     queryKey: ["workouts", userId],
-    queryFn: () => kyInstance.get(API_ROUTES.WORKOUTS).json<Workout[]>(),
+    queryFn: () => ky.get(API_ROUTES.WORKOUTS).json<Workout[]>(),
     enabled: !!userId,
     staleTime: Infinity,
   });
 
   const queryRoutines = useQuery({
     queryKey: ["routines", userId],
-    queryFn: () => kyInstance.get(API_ROUTES.ROUTINES).json<Routine[]>(),
+    queryFn: () => ky.get(API_ROUTES.ROUTINES).json<Routine[]>(),
     enabled: !!userId,
     staleTime: Infinity,
   });
@@ -45,7 +46,7 @@ export default function Home() {
 
   const { mutate: createWorkout } = useMutation({
     mutationFn: async (newWorkout) => {
-      const response = await kyInstance.post(API_ROUTES.WORKOUTS, {
+      const response = await ky.post(API_ROUTES.WORKOUTS, {
         json: newWorkout,
       });
       return response.json();
@@ -68,7 +69,7 @@ export default function Home() {
 
   const { mutate: createRoutine } = useMutation({
     mutationFn: async (newRoutine) => {
-      const response = await kyInstance.post(API_ROUTES.ROUTINES, {
+      const response = await ky.post(API_ROUTES.ROUTINES, {
         json: newRoutine,
       });
       return response.json();

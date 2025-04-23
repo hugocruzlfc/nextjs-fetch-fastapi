@@ -1,111 +1,159 @@
 "use client";
 import { useAuth } from "@/components/auth-context";
-import { API_ROUTES } from "@/lib/constants";
-import kyInstance from "@/lib/ky-instance";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Metadata } from "next";
+import LoadingButton from "@/components/loading-button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Separator } from "@/components/ui/separator";
+import useLoginRegister from "@/hooks/use-login-register";
+import { signUpSchema, SignUpValues } from "@/lib/validations";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useState } from "react";
 
-export const metadata: Metadata = { title: "" };
+import { useForm } from "react-hook-form";
 
 export default function Page() {
   const { login } = useAuth();
-  const queryClient = useQueryClient();
+  const mutation = useLoginRegister();
+  const [loginLoading, setLoginLoading] = useState(false);
 
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [registerUsername, setRegisterUsername] = useState("");
-  const [registerPassword, setRegisterPassword] = useState("");
-
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
-    e.preventDefault();
-    login(username, password);
-  };
-
-  const { mutate: createUser } = useMutation({
-    mutationFn: async (newRoutine) => {
-      const response = await kyInstance.post(API_ROUTES.AUTH, {
-        json: newRoutine,
-      });
-      return response.json();
-    },
-    onMutate: async () => {
-      // toast.success(`Post ${data.isBookmarkedByUser ? "un" : ""}bookmarked`);
-      login(registerUsername, registerPassword);
-    },
-    onError(error) {
-      console.error(error);
-      // toast.error("Something went wrong. Please try again.");
+  const form = useForm<SignUpValues>({
+    resolver: zodResolver(signUpSchema),
+    defaultValues: {
+      username: "",
+      password: "",
     },
   });
 
-  return (
-    <div className="container">
-      <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="mb-3">
-          <label htmlFor="username" className="form-label">
-            Username
-          </label>
-          <input
-            type="text"
-            className="form-control"
-            id="username"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            required
-          />
-        </div>
-        <div className="mb-3">
-          <label htmlFor="password" className="form-label">
-            Password
-          </label>
-          <input
-            type="password"
-            className="form-control"
-            id="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit" className="btn btn-primary">
-          Login
-        </button>
-      </form>
+  async function onLogin(values: SignUpValues) {
+    setLoginLoading(true);
+    await login(values.username, values.password);
+    setLoginLoading(false);
+  }
 
-      <h2 className="mt-5">Register</h2>
-      <form onSubmit={() => createUser()}>
-        <div className="mb-3">
-          <label htmlFor="registerUsername" className="form-label">
-            Username
-          </label>
-          <input
-            type="text"
-            className="form-control"
-            id="registerUsername"
-            value={registerUsername}
-            onChange={(e) => setRegisterUsername(e.target.value)}
-            required
-          />
-        </div>
-        <div className="mb-3">
-          <label htmlFor="registerPassword" className="form-label">
-            Password
-          </label>
-          <input
-            type="password"
-            className="form-control"
-            id="registerPassword"
-            value={registerPassword}
-            onChange={(e) => setRegisterPassword(e.target.value)}
-            required
-          />
-        </div>
-        <button type="submit" className="btn btn-primary">
-          Register
-        </button>
-      </form>
+  //   const handleSubmit = (e: React.FormEvent<HTMLFormElement>): void => {
+  //     e.preventDefault();
+  //     login(username, password);
+  //   };
+
+  async function onCreateUser(values: SignUpValues) {
+    mutation.mutate(
+      {
+        username: values.username,
+        password: values.password,
+      },
+
+      {
+        onSuccess: () => {
+          login(values.username, values.password);
+        },
+      },
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center space-y-6 p-10">
+      <Card className="w-full md:w-1/2">
+        <CardHeader>
+          <CardTitle>Login</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onLogin)} className="space-y-3">
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Your username" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Your password"
+                        {...field}
+                        type="password"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <LoadingButton type="submit" loading={loginLoading}>
+                Login
+              </LoadingButton>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
+
+      <Separator />
+
+      <Card className="w-full md:w-1/2">
+        <CardHeader>
+          <CardTitle>Register</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onCreateUser)}
+              className="space-y-3"
+            >
+              <FormField
+                control={form.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Your username" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="password"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Password</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Your password"
+                        {...field}
+                        type="password"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <LoadingButton type="submit" loading={mutation.isPending}>
+                Register
+              </LoadingButton>
+            </form>
+          </Form>
+        </CardContent>
+      </Card>
     </div>
   );
 }
