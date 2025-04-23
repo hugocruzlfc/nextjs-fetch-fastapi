@@ -147,38 +147,6 @@ export default function CreateRoutineForm() {
               )}
             />
 
-            {/* <FormField
-              control={form.control}
-              name="workouts"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Workouts</FormLabel>
-                  <FormControl>
-                    <MultipleSelect
-                      {...field}
-                      defaultOptions={queryWorkouts.data?.map((workout) => ({
-                        label: workout.name,
-                        value: workout.id,
-                      }))}
-                      value={field.value?.map((cat) => ({
-                        label: cat,
-                        value: cat,
-                      }))}
-                      onChange={(selected) =>
-                        field.onChange(selected.map((s) => s.value))
-                      }
-                      placeholder="Select workouts"
-                      emptyIndicator={
-                        <p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">
-                          No results found.
-                        </p>
-                      }
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            /> */}
             <div className="flex justify-end">
               <LoadingButton type="submit" loading={false}>
                 Create

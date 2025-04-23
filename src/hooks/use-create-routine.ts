@@ -1,8 +1,13 @@
 import { useAuth } from "@/components/auth-context";
 import { API_ROUTES } from "@/lib/constants";
-import { Workout } from "@/lib/types";
+import { RoutinesPage } from "@/lib/types";
 import { CreateRoutineValues } from "@/lib/validations";
-import { QueryKey, useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  InfiniteData,
+  QueryKey,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import ky from "ky";
 
 export function useCreateRoutine() {
@@ -10,8 +15,6 @@ export function useCreateRoutine() {
   const queryClient = useQueryClient();
 
   const userId = user?.access_token;
-
-  const queryKeyRoutines: QueryKey = ["routines", userId];
 
   const mutation = useMutation({
     mutationFn: async (routine: CreateRoutineValues) => {
@@ -24,19 +27,43 @@ export function useCreateRoutine() {
       });
       return response.json();
     },
-    onMutate: async () => {
-      // toast.success(`Post ${data.isBookmarkedByUser ? "un" : ""}bookmarked`);
+    onSuccess: async (newRoutine) => {
+      const queryKey: QueryKey = ["routines", userId];
 
-      await queryClient.cancelQueries({ queryKey: queryKeyRoutines });
+      await queryClient.cancelQueries({ queryKey });
 
-      const previousState = queryClient.getQueryData<Workout>(queryKeyRoutines);
+      queryClient.setQueryData<InfiniteData<RoutinesPage, string | null>>(
+        queryKey,
+        (oldData) => {
+          const firstPage = oldData?.pages[0];
 
-      return { previousState };
+          if (firstPage) {
+            return {
+              pageParams: oldData.pageParams,
+              pages: [
+                {
+                  ...firstPage,
+                  routines: [...firstPage.routines, newRoutine],
+                },
+                ...oldData.pages.slice(1),
+              ],
+            } as InfiniteData<RoutinesPage, string | null>;
+          }
+        },
+      );
+
+      queryClient.invalidateQueries({
+        queryKey,
+        predicate(query) {
+          return !query.state.data;
+        },
+      });
+
+      // toast.success("Comment created");
     },
-    onError(error, variables, context) {
-      queryClient.setQueryData(queryKeyRoutines, context?.previousState);
+    onError(error) {
       console.error(error);
-      // toast.error("Something went wrong. Please try again.");
+      // toast.error("Failed to submit comment. Please try again.");
     },
   });
 

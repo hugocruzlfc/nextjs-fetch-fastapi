@@ -6,27 +6,62 @@ import ProtectedRoute from "@/components/protected-routes";
 import { Button } from "@/components/ui/button";
 import { API_ROUTES } from "@/lib/constants";
 
-import { Routine } from "@/lib/types";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { RoutinesPage } from "@/lib/types";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import ky from "ky";
 
 export default function Home() {
-  const queryClient = useQueryClient();
   const { user, logout } = useAuth();
 
   const userId = user?.access_token;
 
-  const queryRoutines = useQuery({
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetching,
+    isFetchingNextPage,
+    status,
+  } = useInfiniteQuery({
     queryKey: ["routines", userId],
     queryFn: () =>
       ky
         .get(API_ROUTES.ROUTINES, {
           headers: { Authorization: `Bearer ${user?.access_token}` },
         })
-        .json<Routine[]>(),
+        .json<RoutinesPage>(),
     enabled: !!userId,
-    staleTime: Infinity,
+    initialPageParam: null as string | null,
+    getNextPageParam: (firstPage) => firstPage.previousCursor,
+    select: (data) => ({
+      pages: [...data.pages].reverse(),
+      pageParams: [...data.pageParams].reverse(),
+    }),
   });
+
+  const routines = data?.pages.flatMap((page) => page.routines) || [];
+
+  console.log(routines);
+
+  if (status === "pending") {
+    return <p>Loading...</p>;
+  }
+
+  if (status === "success" && !routines.length && !hasNextPage) {
+    return (
+      <p className="text-muted-foreground text-center">
+        You don&apos;t have any routines yet.
+      </p>
+    );
+  }
+
+  if (status === "error") {
+    return (
+      <p className="text-destructive text-center">
+        An error occurred while loading routines.
+      </p>
+    );
+  }
 
   return (
     <ProtectedRoute>
@@ -44,10 +79,10 @@ export default function Home() {
           <h3>Your routines:</h3>
 
           <ul>
-            {queryRoutines.data?.map((routine) => (
-              <li key={routine.id} className="p-2">
-                <h4 className="text-sm font-semibold">{routine.name}</h4>
-                <p>{routine.description}</p>
+            {routines.map((routine) => (
+              <li key={routine?.id} className="p-2">
+                <h4 className="text-sm font-semibold">{routine?.name}</h4>
+                <p>{routine?.description}</p>
               </li>
             ))}
           </ul>

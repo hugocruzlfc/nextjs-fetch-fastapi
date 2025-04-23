@@ -18,3 +18,8 @@ export interface User {
   id: string;
   username: string;
 }
+
+export interface RoutinesPage {
+  routines: Routine[];
+  previousCursor: string | null;
+}
