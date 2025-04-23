@@ -6,6 +6,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { useCreateRoutine } from "@/hooks/use-create-routine";
 import { API_ROUTES } from "@/lib/constants";
 import { Workout } from "@/lib/types";
 import { CreateRoutineValues, createRoutineSchema } from "@/lib/validations";
@@ -38,6 +39,7 @@ import { Textarea } from "./ui/textarea";
 export default function CreateRoutineForm() {
   const { user } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
+  const mutation = useCreateRoutine();
 
   const userId = user?.access_token;
 
@@ -45,7 +47,7 @@ export default function CreateRoutineForm() {
     queryKey: ["workouts", userId],
     queryFn: () =>
       ky
-        .get(API_ROUTES.WORKOUTS, {
+        .get(`${API_ROUTES.WORKOUTS}/workouts`, {
           headers: { Authorization: `Bearer ${user?.access_token}` },
         })
         .json<Workout[]>(),
@@ -58,13 +60,17 @@ export default function CreateRoutineForm() {
     defaultValues: {
       name: "",
       description: "",
-      workouts: [],
+      workouts: "",
     },
   });
 
-  console.log(queryWorkouts);
-
-  async function onLogin(values: CreateRoutineValues) {}
+  async function onLogin(values: CreateRoutineValues) {
+    mutation.mutate({
+      name: values.name,
+      description: values.description,
+      workouts: values.workouts,
+    });
+  }
 
   return (
     <Collapsible
@@ -122,7 +128,7 @@ export default function CreateRoutineForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Workouts</FormLabel>
-                  <Select onValueChange={field.onChange}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select workout" />
@@ -140,6 +146,39 @@ export default function CreateRoutineForm() {
                 </FormItem>
               )}
             />
+
+            {/* <FormField
+              control={form.control}
+              name="workouts"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Workouts</FormLabel>
+                  <FormControl>
+                    <MultipleSelect
+                      {...field}
+                      defaultOptions={queryWorkouts.data?.map((workout) => ({
+                        label: workout.name,
+                        value: workout.id,
+                      }))}
+                      value={field.value?.map((cat) => ({
+                        label: cat,
+                        value: cat,
+                      }))}
+                      onChange={(selected) =>
+                        field.onChange(selected.map((s) => s.value))
+                      }
+                      placeholder="Select workouts"
+                      emptyIndicator={
+                        <p className="text-center text-lg leading-10 text-gray-600 dark:text-gray-400">
+                          No results found.
+                        </p>
+                      }
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            /> */}
             <div className="flex justify-end">
               <LoadingButton type="submit" loading={false}>
                 Create

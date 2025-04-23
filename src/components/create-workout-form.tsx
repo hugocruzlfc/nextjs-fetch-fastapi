@@ -6,6 +6,7 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import { useCreateWorkout } from "@/hooks/use-create-workout";
 import { createWorkoutSchema, CreateWorkoutValues } from "@/lib/validations";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronsUpDown } from "lucide-react";
@@ -25,6 +26,7 @@ import { Textarea } from "./ui/textarea";
 
 export default function CreateWorkoutForm() {
   const [isOpen, setIsOpen] = useState(false);
+  const mutation = useCreateWorkout();
 
   const form = useForm<CreateWorkoutValues>({
     resolver: zodResolver(createWorkoutSchema),
@@ -34,7 +36,12 @@ export default function CreateWorkoutForm() {
     },
   });
 
-  async function onSubmit(values: CreateWorkoutValues) {}
+  async function onSubmit(values: CreateWorkoutValues) {
+    mutation.mutate({
+      name: values.name,
+      description: values.description,
+    });
+  }
 
   return (
     <Collapsible

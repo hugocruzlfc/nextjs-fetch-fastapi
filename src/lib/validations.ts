@@ -21,6 +21,6 @@ export type CreateWorkoutValues = z.infer<typeof createWorkoutSchema>;
 export const createRoutineSchema = z.object({
   name: requiredString,
   description: requiredString,
-  workouts: z.array(z.string()),
+  workouts: requiredString,
 });
 export type CreateRoutineValues = z.infer<typeof createRoutineSchema>;
