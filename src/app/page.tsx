@@ -1,6 +1,9 @@
 "use client";
 import { useAuth } from "@/components/auth-context";
+import CreateRoutineForm from "@/components/create-routine-form";
+import CreateWorkoutForm from "@/components/create-workout-form";
 import ProtectedRoute from "@/components/protected-routes";
+import { Button } from "@/components/ui/button";
 import { API_ROUTES } from "@/lib/constants";
 
 import { Routine, Workout } from "@/lib/types";
@@ -17,21 +20,7 @@ export default function Home() {
   const queryClient = useQueryClient();
   const { user, logout } = useAuth();
 
-  console.log(user);
-
   const userId = user?.access_token;
-
-  const queryWorkouts = useQuery({
-    queryKey: ["workouts", userId],
-    queryFn: () =>
-      ky
-        .get(API_ROUTES.WORKOUTS, {
-          headers: { Authorization: `Bearer ${user?.access_token}` },
-        })
-        .json<Workout[]>(),
-    enabled: !!userId,
-    staleTime: Infinity,
-  });
 
   const queryRoutines = useQuery({
     queryKey: ["routines", userId],
@@ -104,12 +93,15 @@ export default function Home() {
 
   return (
     <ProtectedRoute>
-      <div className="container">
+      <>
         <h1>Welcome!</h1>
-        <button onClick={logout} className="btn btn-danger">
+        <Button onClick={logout} variant="destructive">
           Logout
-        </button>
-
+        </Button>
+        <div className="space-y-5 p-10">
+          <CreateWorkoutForm />
+          <CreateRoutineForm />
+        </div>
         <div className="accordion mt-5 mb-5" id="accordionExample">
           <div className="accordion-item">
             <h2 className="accordion-header" id="headingOne">
@@ -244,7 +236,6 @@ export default function Home() {
             </div>
           </div>
         </div>
-
         <div>
           <h3>Your routines:</h3>
 
@@ -267,7 +258,7 @@ export default function Home() {
             ))} */}
           </ul>
         </div>
-      </div>
+      </>
     </ProtectedRoute>
   );
 }

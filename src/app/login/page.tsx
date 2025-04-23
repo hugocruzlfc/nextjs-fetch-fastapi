@@ -20,7 +20,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 
 export default function Page() {
-  const { login, user } = useAuth();
+  const { login } = useAuth();
   const mutation = useLoginRegister();
   const [loginLoading, setLoginLoading] = useState(false);
 
@@ -54,7 +54,7 @@ export default function Page() {
   }
 
   return (
-    <div className="flex flex-col items-center space-y-6 p-10">
+    <div className="flex flex-col items-center space-y-6">
       <Card className="w-full md:w-1/2">
         <CardHeader>
           <CardTitle>Login</CardTitle>

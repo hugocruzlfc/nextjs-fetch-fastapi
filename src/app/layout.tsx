@@ -30,7 +30,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <AuthProvider>
-          <ReactQueryProvider>{children}</ReactQueryProvider>
+          <ReactQueryProvider>
+            <div className="max-w-7xl p-10">{children}</div>
+          </ReactQueryProvider>
         </AuthProvider>
       </body>
     </html>

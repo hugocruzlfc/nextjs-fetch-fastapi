@@ -11,3 +11,16 @@ export const signUpSchema = z.object({
 });
 
 export type SignUpValues = z.infer<typeof signUpSchema>;
+
+export const createWorkoutSchema = z.object({
+  name: requiredString,
+  description: requiredString,
+});
+export type CreateWorkoutValues = z.infer<typeof createWorkoutSchema>;
+
+export const createRoutineSchema = z.object({
+  name: requiredString,
+  description: requiredString,
+  workouts: z.array(z.string()),
+});
+export type CreateRoutineValues = z.infer<typeof createRoutineSchema>;
