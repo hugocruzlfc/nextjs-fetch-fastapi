@@ -93,7 +93,7 @@ export default function CreateWorkoutForm() {
               )}
             />
             <div className="flex justify-end">
-              <LoadingButton type="submit" loading={false}>
+              <LoadingButton type="submit" loading={mutation.isPending}>
                 Create
               </LoadingButton>
             </div>

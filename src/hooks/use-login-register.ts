@@ -17,7 +17,8 @@ export default function useLoginRegister() {
           password,
         },
       });
-      console.log(response);
+
+      return response.json();
     },
     onMutate: async () => {
       // toast.success(`Post ${data.isBookmarkedByUser ? "un" : ""}bookmarked`);

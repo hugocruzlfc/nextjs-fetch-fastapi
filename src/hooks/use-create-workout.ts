@@ -10,7 +10,6 @@ export function useCreateWorkout() {
   const queryClient = useQueryClient();
 
   const userId = user?.access_token;
-  const queryKeyWorkouts: QueryKey = ["workouts", userId];
 
   const mutation = useMutation({
     mutationFn: async (workout: CreateWorkoutValues) => {
@@ -18,21 +17,31 @@ export function useCreateWorkout() {
         json: workout,
         headers: { Authorization: `Bearer ${user?.access_token}` },
       });
-      return response.json();
+      return response.json<Workout>();
     },
-    onMutate: async () => {
+    onSuccess: async (newWorkout) => {
       // toast.success(`Post ${data.isBookmarkedByUser ? "un" : ""}bookmarked`);
 
-      await queryClient.cancelQueries({ queryKey: queryKeyWorkouts });
+      const queryKey: QueryKey = ["workouts", userId];
 
-      const previousState = queryClient.getQueryData<Workout>(queryKeyWorkouts);
+      await queryClient.cancelQueries({ queryKey });
 
-      return { previousState };
+      queryClient.setQueryData<Workout[]>(queryKey, (oldData) => {
+        if (oldData) {
+          return [...oldData, newWorkout];
+        }
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: queryKey,
+        predicate(query) {
+          return !query.state.data;
+        },
+      });
     },
-    onError(error, variables, context) {
-      queryClient.setQueryData(queryKeyWorkouts, context?.previousState);
+    onError(error) {
       console.error(error);
-      // toast.error("Something went wrong. Please try again.");
+      //toast.error("Failed to submit comment. Please try again.");
     },
   });
 
